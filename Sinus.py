@@ -19,7 +19,7 @@ class MyClient(discord.Client):
         
         assert isinstance(message, discord.Message)
         assert isinstance(channel, discord.TextChannel)
-        assert isinstance(author, discord.User)
+        assert isinstance(author, discord.Member)
 
         if message.author == self.user:
             return
@@ -46,5 +46,6 @@ class MyClient(discord.Client):
 
 
 if __name__ == "__main__":
-    client = MyClient()
-    client.run('NTkzMTI2NzU0ODMxNTY0ODAw.XRJXAg.HqYyCObz-KpsjqYmQLna34oAuP0')
+    with open("token.txt") as f:
+        client = MyClient()
+        client.run(f.read())
