@@ -1,0 +1,2 @@
+# Sinus
+Discord bot
