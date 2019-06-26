@@ -70,7 +70,7 @@ class MyClient(discord.Client):
                 
                 moderatorRole = discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["permissionRole"]))
                 if not moderatorRole in author.roles:
-                    await channel.send(data["modcommands"]["messages"]["rejected"])
+                    await channel.send(data["rejected"])
                 else:
                     muted = discord.utils.get(channel.guild.members, mention=command[5:])
                     if not muted:
@@ -94,7 +94,7 @@ class MyClient(discord.Client):
                 
                 moderatorRole = discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["permissionRole"]))
                 if not moderatorRole in author.roles:
-                    await channel.send(data["modcommands"]["messages"]["rejected"])
+                    await channel.send(data["rejected"])
                 else:
                     muted = discord.utils.get(channel.guild.members, mention=command[5:])
                     if not muted:
@@ -117,7 +117,7 @@ class MyClient(discord.Client):
                 
                 moderatorRole = discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["permissionRole"]))
                 if not moderatorRole in author.roles:
-                    await channel.send(data["modcommands"]["messages"]["rejected"])
+                    await channel.send(data["rejected"])
                 else:
                     muted = discord.utils.get(channel.guild.members, mention=command[6:])
                     if not muted:
@@ -138,7 +138,7 @@ class MyClient(discord.Client):
             elif command.startswith("unmute") and data["modcommands"]["enabled"]:  
                 moderatorRole = discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["permissionRole"]))
                 if not moderatorRole in author.roles:
-                    await channel.send(data["modcommands"]["messages"]["rejected"])
+                    await channel.send(data["rejected"])
                 else:
                     muted = discord.utils.get(channel.guild.members, mention=command[7:])
                     if not muted:
@@ -163,7 +163,7 @@ class MyClient(discord.Client):
                 
                 moderatorRole = discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["permissionRole"]))
                 if not moderatorRole in author.roles:
-                    await channel.send(data["modcommands"]["messages"]["rejected"])
+                    await channel.send(data["rejected"])
                 else:
                     muted = discord.utils.get(channel.guild.members, mention=command[4:])
                     if not muted:
@@ -181,6 +181,20 @@ class MyClient(discord.Client):
                         
 
 
+
+
+            elif command.startswith("purge"):
+                if not discord.utils.get(channel.guild.roles, id=int(data["purge"]["permissionRole"])) in author.roles:
+                    await channel.send(data["rerjected"])
+                else:
+                    try:
+                        todlt = min(500,data["purge"]["maxamount"])
+                        todlt = min(todlt, int(command[6:])+1)
+                        await channel.purge(limit=todlt)
+                        await channel.send(data["purge"]["success"].replace("{AMOUNT}",str(todlt)), delete_after=3)
+
+                    except ValueError:
+                        await channel.send(data["purge"]["invalidNumber"])
 
 
 
