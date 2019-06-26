@@ -45,6 +45,7 @@ class MyClient(discord.Client):
 
 
 
+
         data = self.serverData[message.guild.id]
         if message.content.startswith(data["prefix"]):
             command = message.content[len(data["prefix"]):]
@@ -60,6 +61,7 @@ class MyClient(discord.Client):
                     await msg.edit(content="Updated config for this server.")
                 else:
                     await msg.edit(content="This server does not appear to have configuration. Please configure it at http://sinusconfigurator.herokuapp.com/" + str(channel.guild.id))
+
 
 
 
@@ -89,6 +91,9 @@ class MyClient(discord.Client):
 
 
 
+
+
+
                        
             elif command.startswith("kick") and data["modcommands"]["enabled"]:
                 
@@ -109,6 +114,9 @@ class MyClient(discord.Client):
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
                         await muted.kick()
+
+
+
 
 
 
@@ -135,6 +143,10 @@ class MyClient(discord.Client):
 
 
 
+
+
+
+
             elif command.startswith("unmute") and data["modcommands"]["enabled"]:  
                 moderatorRole = discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["permissionRole"]))
                 if not moderatorRole in author.roles:
@@ -153,6 +165,8 @@ class MyClient(discord.Client):
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
                         await muted.remove_roles(discord.utils.get(muted.roles, id=int(data["modcommands"]["mutedRole"])))
+
+
 
 
 
@@ -183,6 +197,9 @@ class MyClient(discord.Client):
 
 
 
+
+
+
             elif command.startswith("purge"):
                 if not discord.utils.get(channel.guild.roles, id=int(data["purge"]["permissionRole"])) in author.roles:
                     await channel.send(data["rerjected"])
@@ -191,10 +208,15 @@ class MyClient(discord.Client):
                         todlt = min(500,data["purge"]["maxamount"])
                         todlt = min(todlt, int(command[6:])+1)
                         await channel.purge(limit=todlt)
-                        await channel.send(data["purge"]["success"].replace("{AMOUNT}",str(todlt)), delete_after=3)
+                        await channel.send(data["purge"]["success"].replace("{AMOUNT}",str(todlt-1)), delete_after=3)
 
                     except ValueError:
                         await channel.send(data["purge"]["invalidNumber"])
+
+
+
+
+
 
 
 
