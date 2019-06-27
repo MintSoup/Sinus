@@ -1,6 +1,7 @@
 import discord
 import aiohttp
 import json
+import asyncio
 
 class MyClient(discord.Client):
 
@@ -12,6 +13,7 @@ class MyClient(discord.Client):
 
     async def on_ready(self):
         print('Logged on as', self.user)
+        await client.change_presence(activity=discord.Game(name='sinusconfigurator.herokuapp.com'))
 
        
                 
@@ -41,7 +43,7 @@ class MyClient(discord.Client):
                 await msg.edit(content="This server does not appear to have configuration. Please configure it at http://sinusconfigurator.herokuapp.com/" + str(channel.guild.id))
             
 
-
+        
 
 
 
@@ -50,7 +52,6 @@ class MyClient(discord.Client):
         if message.content.startswith(data["prefix"]):
             command = message.content[len(data["prefix"]):]
             assert isinstance(command, str)
-
 
 
             if command == "reload":
@@ -82,7 +83,7 @@ class MyClient(discord.Client):
                         await channel.send(data["modcommands"]["messages"]["reason"])
                         reason = await self.wait_for('message', check=lambda d: d.author == author)
                         emb = self.embed(int(data["embedcolor"], base=16),
-                        data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "muted").replace("{BANNER}", author.name),
+                        data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "muted").replace("{MODERATOR}", author.name),
                         data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
@@ -109,7 +110,7 @@ class MyClient(discord.Client):
                         await channel.send(data["modcommands"]["messages"]["reason"])
                         reason = await self.wait_for('message', check=lambda d: d.author == author)
                         emb = self.embed(int(data["embedcolor"], base=16),
-                        data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "kicked").replace("{BANNER}", author.name),
+                        data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "kicked").replace("{MODERATOR}", author.name),
                         data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
@@ -135,7 +136,7 @@ class MyClient(discord.Client):
                         await channel.send(data["modcommands"]["messages"]["reason"])
                         reason = await self.wait_for('message', check=lambda d: d.author == author)
                         emb = self.embed(int(data["embedcolor"], base=16),
-                        data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "unbanned").replace("{BANNER}", author.name),
+                        data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "unbanned").replace("{MODERATOR}", author.name),
                         data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
@@ -160,7 +161,7 @@ class MyClient(discord.Client):
                         await channel.send(data["modcommands"]["messages"]["reason"])
                         reason = await self.wait_for('message', check=lambda d: d.author == author)
                         emb = self.embed(int(data["embedcolor"], base=16),
-                        data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "unmuted").replace("{BANNER}", author.name),
+                        data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "unmuted").replace("{MODERATOR}", author.name),
                         data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
@@ -187,7 +188,7 @@ class MyClient(discord.Client):
                         await channel.send(data["modcommands"]["messages"]["reason"])
                         reason = await self.wait_for('message', check=lambda d: d.author == author)
                         emb = self.embed(int(data["embedcolor"], base=16),
-                         data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "banned").replace("{BANNER}", author.name),
+                         data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "banned").replace("{MODERATOR}", author.name),
                          data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
@@ -198,11 +199,12 @@ class MyClient(discord.Client):
 
 
 
-
-
             elif command.startswith("purge"):
+                if not data["purge"]["enabled"]:
+                    return
+
                 if not discord.utils.get(channel.guild.roles, id=int(data["purge"]["permissionRole"])) in author.roles:
-                    await channel.send(data["rerjected"])
+                    await channel.send(data["rejected"])
                 else:
                     try:
                         todlt = min(500,data["purge"]["maxamount"])
@@ -213,6 +215,66 @@ class MyClient(discord.Client):
                     except ValueError:
                         await channel.send(data["purge"]["invalidNumber"])
 
+
+
+
+
+
+            elif command == "help":
+                e = self.embed(int(data["embedcolor"],16), "Help", "")
+                assert isinstance(e, discord.Embed)
+                if data["modcommands"]["enabled"]:
+                    e.add_field(name="Moderator commands", value="""
+                    {p}ban/unban <@Member> - ban/unban someone
+                    {p}kick <@Member> - kick someone
+                    {p}mute/unmute <@Member> - mutes/unmute someone 
+                    {p}tempban <@Member> - temporarily ban someone
+                    """.replace("{p}", data["prefix"]))
+                if data["purge"]["enabled"]:
+                    e.add_field(name="Purge",value="{p}purge <n> - removes the last n messages from this channel".replace("{p}",data["prefix"]))
+
+
+                e.add_field(name="Technical",value="{p}reload - reloads the settings of this server. Use this once you have made changes in your configuration".replace("{p}",data["prefix"]))
+
+                await channel.send(embed=e)
+
+
+
+
+
+
+            elif command.startswith("tempban") and data["modcommands"]["enabled"]:
+                
+                moderatorRole = discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["permissionRole"]))
+                if not moderatorRole in author.roles:
+                    await channel.send(data["rejected"])
+                else:
+                    muted = discord.utils.get(channel.guild.members, mention=command[8:])
+                    if not muted:
+                        await channel.send(data["modcommands"]["messages"]["usernotfound"])
+                    else:
+                        assert isinstance(muted, discord.Member)
+                        await channel.send(data["modcommands"]["messages"]["reason"])
+                        reason = await self.wait_for('message', check=lambda d: d.author == author)
+                        duration = 0
+                        await channel.send(data["modcommands"]["messages"]["duration"])
+                        durmsg = await self.wait_for('message', check=lambda d: d.author == author)
+                        try:
+                            duration = int(durmsg.content)
+                            if duration < 0 :
+                                raise ValueError("Duration < 0")
+                        except ValueError:
+                            await channel.send(data["modcommands"]["messages"]["invalidduration"])
+                            return
+
+                        emb = self.embed(int(data["embedcolor"], base=16),
+                         data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "temporarily banned").replace("{MODERATOR}", author.name),
+                         data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
+                        await channel.send(embed=emb)
+                        await muted.send(embed=emb)
+                        await muted.add_roles(discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["bannedRole"])))
+                        await asyncio.sleep(duration)
+                        await muted.remove_roles(discord.utils.get(muted.roles, id=int(data["modcommands"]["bannedRole"])))
 
 
 
