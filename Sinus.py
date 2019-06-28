@@ -87,9 +87,15 @@ class MyClient(discord.Client):
                         emb = self.embed(int(data["embedcolor"], base=16),
                         data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "muted").replace("{MODERATOR}", author.name),
                         data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
+                        try:
+                            await muted.add_roles(discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["mutedRole"])))
+                        except AttributeError:
+                            await channel.send("Invalid muted role id. Please configure it correctly using the configurator.")
+                            return
+                        
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
-                        await muted.add_roles(discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["mutedRole"])))
+                        
                        
 
 
@@ -140,9 +146,14 @@ class MyClient(discord.Client):
                         emb = self.embed(int(data["embedcolor"], base=16),
                         data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "unbanned").replace("{MODERATOR}", author.name),
                         data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
+                        try:
+                            await muted.remove_roles(discord.utils.get(muted.roles, id=int(data["modcommands"]["bannedRole"])))
+                        except AttributeError:
+                            await channel.send("Invalid banned role id. Please configure it correctly using the configurator.")
+                            return
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
-                        await muted.remove_roles(discord.utils.get(muted.roles, id=int(data["modcommands"]["bannedRole"])))
+                        
 
 
 
@@ -165,10 +176,15 @@ class MyClient(discord.Client):
                         emb = self.embed(int(data["embedcolor"], base=16),
                         data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "unmuted").replace("{MODERATOR}", author.name),
                         data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
+                        try:
+                            await muted.remove_roles(discord.utils.get(muted.roles, id=int(data["modcommands"]["mutedRole"])))
+                        except AttributeError:
+                            await channel.send("Invalid muted role id. Please configure it correctly using the configurator.")
+                            return
+
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
-                        await muted.remove_roles(discord.utils.get(muted.roles, id=int(data["modcommands"]["mutedRole"])))
-
+                       
 
 
 
@@ -192,9 +208,13 @@ class MyClient(discord.Client):
                         emb = self.embed(int(data["embedcolor"], base=16),
                          data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "banned").replace("{MODERATOR}", author.name),
                          data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
+                        try:
+                            await muted.add_roles(discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["bannedRole"])))
+                        except AttributeError:
+                            await channel.send("Invalid banned role id. Please configure it correctly using the configurator.")
+                            return
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
-                        await muted.add_roles(discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["bannedRole"])))
                         
 
 
@@ -250,6 +270,7 @@ class MyClient(discord.Client):
                         emb = self.embed(int(data["embedcolor"], base=16),
                          data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "temporarily banned").replace("{MODERATOR}", author.name),
                          data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
+
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
                         await muted.add_roles(discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["bannedRole"])))
@@ -290,6 +311,8 @@ class MyClient(discord.Client):
                         emb = self.embed(int(data["embedcolor"], base=16),
                          data["modcommands"]["messages"]["title"].replace("{MEMBER}", muted.name).replace("{ACTION}", "temporarily muted").replace("{MODERATOR}", author.name),
                          data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
+
+    
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
                         await muted.add_roles(discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["mutedRole"])))
