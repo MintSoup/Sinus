@@ -43,17 +43,18 @@ class MyClient(discord.Client):
                 await msg.edit(content="Updated config for this server.")
             else:
                 await msg.edit(content="This server does not appear to have configuration. Please configure it at http://sinusconfigurator.herokuapp.com/" + str(channel.guild.id))
-            
-
         
-
-
 
 
         data = self.serverData[message.guild.id]
         if message.content.startswith(data["prefix"]):
             command = message.content[len(data["prefix"]):]
             assert isinstance(command, str)
+
+            async def log(e):
+                if data["logging"]["enabled"]:
+                    logs = discord.utils.get(channel.guild.text_channels, id=data["logging"]["channel"])
+                    await logs.send(embed=e)
 
 
             if command == "reload":
@@ -92,7 +93,7 @@ class MyClient(discord.Client):
                         except AttributeError:
                             await channel.send("Invalid muted role id. Please configure it correctly using the configurator.")
                             return
-                        
+                        await log(emb)
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
                         
@@ -122,6 +123,7 @@ class MyClient(discord.Client):
                         data["modcommands"]["messages"]["body"].replace("{REASON}", reason.content))
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
+                        await log(emb)
                         await muted.kick()
 
 
@@ -153,7 +155,8 @@ class MyClient(discord.Client):
                             return
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
-                        
+                        await log(emb)
+
 
 
 
@@ -184,6 +187,7 @@ class MyClient(discord.Client):
 
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
+                        await log(emb)
                        
 
 
@@ -215,6 +219,7 @@ class MyClient(discord.Client):
                             return
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
+                        await log(emb)
                         
 
 
@@ -232,7 +237,9 @@ class MyClient(discord.Client):
                         todlt = min(500,data["purge"]["maxamount"])
                         todlt = min(todlt, int(command[6:])+1)
                         await channel.purge(limit=todlt)
-                        await channel.send(data["purge"]["success"].replace("{AMOUNT}",str(todlt-1)), delete_after=3)
+                        e = self.embed(int(data["embedcolor"],16),data["purge"]["successtitle"],data["purge"]["success"].replace("{AMOUNT}",str(todlt-1)).replace("{MODERATOR}",author.mention))
+                        await channel.send(embed=e, delete_after=3)
+                        await log(e)
 
                     except ValueError:
                         await channel.send(data["purge"]["invalidNumber"])
@@ -273,6 +280,8 @@ class MyClient(discord.Client):
 
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
+                        await log(emb)
+
                         await muted.add_roles(discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["bannedRole"])))
                         await asyncio.sleep(duration)
                         await muted.remove_roles(discord.utils.get(muted.roles, id=int(data["modcommands"]["bannedRole"])))
@@ -315,6 +324,8 @@ class MyClient(discord.Client):
     
                         await channel.send(embed=emb)
                         await muted.send(embed=emb)
+                        await log(emb)
+
                         await muted.add_roles(discord.utils.get(channel.guild.roles, id=int(data["modcommands"]["mutedRole"])))
                         await asyncio.sleep(duration)
                         await muted.remove_roles(discord.utils.get(muted.roles, id=int(data["modcommands"]["mutedRole"])))
@@ -373,6 +384,15 @@ class MyClient(discord.Client):
                             """.replace("{p}",data["prefix"]))
 
                             await channel.send(embed=e)
+
+
+
+
+
+            
+
+
+            
 
 
 
